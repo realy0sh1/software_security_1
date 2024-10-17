@@ -37,14 +37,78 @@ switch to intel syntax, add:
 ```
 
 
-## gdb + gef: Debugging and Dynamic Analysis
-- install gdb + gef
-```
-sudo apt install gdb
-bash -c "$(wget https://gef.blah.cat/sh -O -)"
-```
 
-- get docs: https://hugsy.github.io/gef/commands/pie/
+## gdb + pwndbg: Debugging and Dynamic Analysis
+- cheat sheet: https://pwndbg.re/CheatSheet.pdf
+- install gdb + pwndebug (or gef)
+```
+git clone https://github.com/pwndbg/pwndbg
+cd pwndbg
+./setup.sh
+```
+- open binary directly in gdb
+ ```
+gdb ./my_binary
+ ```
+- attack gdb to running process: get newest process id of process cat and debug
+```
+sudo -E gdb -p $(pgrep -n vuln)
+```
+- print (20 entries) of stack
+```
+stack 20
+```
+- show memory at rsi
+```
+telescope $rsi 20
+```
+- print a value
+```
+p/x $rsi
+```
+- run program (and interact with it) 
+```
+r
+```
+- start and break at the main function (does the initialization)
+```
+start
+```
+- start at the very first instruction and break (all registers zero)
+```
+starti
+```
+- continue (until the end/breakpoint)
+```
+c
+```
+- step a single instruction
+```
+si
+```
+- find all commands that are related to another command (e.g. similar to step)
+```
+apropos step
+```
+- press enter to repeat same command
+- step out of a function (runs until the return of the function)
+```
+fin
+```
+- next instruction (skip calls, meaning execute call and stop after wards)
+```
+ni
+```
+- set break points (break on the functino "read")
+```
+b read
+```
+- break on address
+```
+b *Ox55...555
+```
+- gdb will turn off ASLR if we start programm with gdb
+- if we attach gdb to a programm, ASLR is on => addresses change => breakpoints will not work
 
 
 ## strace: trace system calls
@@ -75,7 +139,7 @@ conn = pwn.remote('127.0.0.1', 1024)
 conn.recvuntil(b'print:')
 
 # we want to write the address 0x00000000004011c0 into memory
-# we start by filling buffer with dummy values 'A' and finish with newline '\n'
+# we start by filling buffer with dummy values 'A' and finish with newline '\n' (0x0a)
 # addresses are stored in little endien (that means 0xCAFE is stored as 0xFE 0xCA)
 # that means the address 0x00000000004011c0 must be transmitted as 0xc011400000000000
 message = b'A' * 56 + b'\xc0\x11\x40\x00\x00\x00\x00\x00\n'
@@ -124,7 +188,7 @@ man 2 open
 
 ## Registers
 - restore: rbx, rbp, r12, r13, r14, r15, rsp
-- change: rax, rcx, rdx, rsi, rdi, r8, r9, r10, r11
+- change freely: rax, rcx, rdx, rsi, rdi, r8, r9, r10, r11
 
 ## x86 (amd64) instruction set
 - https://treeniks.github.io/x86-64-simplified/prefix.html
