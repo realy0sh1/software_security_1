@@ -2,7 +2,7 @@
 - Tim Niklas Gruel 1080 2021 2831
 - username: realy0sh1
 
-# Writeup: "peeky"
+# Writeup: "seashells"
 - story: same as peek, but without Null bytesFinally, actual shell code shellcode. The flag path is randomized, try spawning a shell! 
 - the folling script automatically exploits it:
 ```python
