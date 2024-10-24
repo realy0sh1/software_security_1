@@ -30,11 +30,65 @@ objdump -M intel -d ./my_binary
 
 
 ## gcc: compiler
-switch to intel syntax, add:
+- switch to intel syntax, add at top of asm file fizzbuzz.s:
 ```
 .intel_syntax noprefix
-```
+.globl do_fizzbuzz ;#.global _start # do this if "main" and not called from c
 
+do_fizzbuzz:
+	push rbp
+	push rbx
+	push rdx
+	xor rcx, rcx
+	
+	loop:
+		xor r10, r10
+		mov r10b, 3
+```
+- cmpile asm to elf (can be executed, e.g. in gdb)
+```
+gcc -Wl,-N -ffreestanding -nostdlib -static fizzbuzz.s -o fizzbuzz.elf
+```
+-look at elf
+```
+objdump -M intel -d ./fizzbuzz.elf
+```
+- run elf
+```
+gdb ./fizzbuzz.elf
+```
+- extract shell code as bytes
+```
+objcopy --dump-section .text=fizzbuzz.raw fizzbuzz.elf
+```
+- call from main.c
+```
+#include <stdio.h>
+#include <stdint.h>
+
+extern int do_fizzbuzz(uint32_t* b);
+
+int main(){
+	uint32_t a[2048];
+	int res;
+	
+	for (int i = 0; i < 2048; i++)
+	{
+		a[i] = i+1;
+	}
+	res = do_fizzbuzz(a);
+	for (int i = 0; i < 16; i++)
+	{
+		printf("%x\n", a[i]);
+	}
+	printf("res: %d\n", res);
+	return res;
+}
+```
+- compile c with
+```
+gcc main.c fizzbuzz.s -o main
+```
 
 
 ## gdb + pwndbg: Debugging and Dynamic Analysis
@@ -181,6 +235,8 @@ conn.sendline(payload)
 # start interactive session (we have a shell now)
 conn.interactive()
 ```
+
+
 
 
 ## netcat: connect to instance
