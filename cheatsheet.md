@@ -260,5 +260,29 @@ man 2 open
 - restore: rbx, rbp, r12, r13, r14, r15, rsp
 - change freely: rax, rcx, rdx, rsi, rdi, r8, r9, r10, r11
 
+- fastcall: rdi, rsi, rdx, rcx, r8, r9, stack
+- syscall: rdi, rsi, rdx
+
+
 ## x86 (amd64) instruction set
 - https://treeniks.github.io/x86-64-simplified/prefix.html
+
+
+## find ROP gadgets
+- https://github.com/sashs/Ropper
+- install ropper
+```
+sudo pip install capstone
+sudo pip install filebytes
+sudo pip install keystone-engine
+pip install ropper
+```
+- find gadgets
+```
+ropper --file ./vuln
+ropper --file ./vuln --search syscall
+ropper --file ./vuln --inst-count 2 --type rop
+ropper --file ./vuln --search "mov rdi, e?x" --inst-count 2 --type rop
+
+ropper --file ./vuln --semantic "rdi+=rax"
+```
