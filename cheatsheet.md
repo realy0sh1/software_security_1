@@ -164,6 +164,7 @@ b read
 - break on address
 ```
 b *Ox55...555
+b *main+10
 ```
 - gdb will turn off ASLR if we start programm with gdb
 - if we attach gdb to a programm, ASLR is on => addresses change => breakpoints will not work
@@ -178,6 +179,17 @@ info symbol 0x79ac90a29d90
 - show next 10 instructions starting at address
 ```
 x/10i 0x747a03e2a3e5
+```
+- disassemble function
+```
+disassemble <function_name>
+```
+- behaviour with forks
+```
+set follow-fork-mode child
+set detach-on-fork off
+#create catch point
+catch fork
 ```
 
 
@@ -252,6 +264,18 @@ conn.sendline(payload)
 # start interactive session (we have a shell now)
 conn.interactive()
 ```
+```python
+form pwn import *
+
+context.terminal
+
+context.terminal = ['/bin/sh']
+tube = gdb.debug('./vuln')
+
+tube.write(b'A'*40)
+
+```
+
 
 
 
@@ -308,4 +332,33 @@ ropper --file ./vuln --semantic "rdi+=rax"
 
 # pwninit
 cargo install pwninit
+
+
+# find out which libc is used:
+```
+LD_DEBUG=libs ./vuln
+```
+
+
+# extract linker to run other libc locally
+- get container id
+```
+docker ps
+```
+- get correct linker (in addition to the already provided libc)
+```
+docker exec -it c93ecb781483 /bin/bash
+cd /lib/x86_64-linux-gnu
+
+ld-linux-x86-64.so.2
+
+docker cp c93ecb781483:/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 /home/timniklas/Code/software_security_1/homework_02/10_echo
+```
+- setup pwndbg
+```
+pwninit
+```
+
+
+
 
