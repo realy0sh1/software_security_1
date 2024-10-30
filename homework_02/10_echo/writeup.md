@@ -92,3 +92,8 @@ int main(void)
 ```
 softsec{qI_y8Nh6lXNCEBiyCZSuP_raN3LKqprPrebeNHBUVHZNFwR8cVnSl05D40EZidOL}
 ```
+
+## 3) Optional
+- we can override the .got address and point printf to system()
+- this is possible because: partial RELRO (override .got)
+

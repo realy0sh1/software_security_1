@@ -330,15 +330,6 @@ ropper --file ./vuln --search "pop rdi; ret;"
 ropper --file ./vuln --semantic "rdi+=rax"
 ```
 
-# pwninit
-cargo install pwninit
-
-
-# find out which libc is used:
-```
-LD_DEBUG=libs ./vuln
-```
-
 
 # extract linker to run other libc locally
 - get container id
@@ -356,9 +347,9 @@ docker cp c93ecb781483:/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 /home/timnikla
 ```
 - setup pwndbg
 ```
-pwninit
+- use pwninit to get it working (cargo install pwninit)
 ```
-
-
-
-
+- verify that it worked
+```
+LD_DEBUG=libs ./vuln_patched
+```
