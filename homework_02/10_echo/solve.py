@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+#./solve.py LOCAL DEBUG
+
 from pwn import *
 
 exe = ELF("./vuln_patched")
