@@ -352,3 +352,12 @@ chain = b''.join([
 	pwn.p64(binary.symbols['system'])
 ])
 ```
+
+
+# One_gadget
+- install
+```
+sudo gem install one_gadget
+```
+
+- 
