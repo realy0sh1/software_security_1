@@ -196,6 +196,23 @@ set follow-fork-mode child
 ```
 set detach-on-fork off
 ```
+- create breakpoint in gdb if SIGINT signal handler triggers
+```
+handler SIGINT stop apss
+```
+- see all signals
+```
+kill -l
+```
+- send signal to program (that runs inside gdb)
+```
+kill -SIGINT $(pgrep signal-example)
+```
+- search a 8 bytes in stack in gdb
+```
+search -t qword 0xdeadbead
+```
+
 
 ## strace: trace system calls
 - todo
@@ -299,6 +316,11 @@ badbytes 0a
 ```
 search /1/ pop rdi
 ```
+- find gadgets with ropper
+```
+search pop %; mov rdi, [rsp + %]; mov rax, [rsp + %];
+```
+
 
 
 # extract linker to run other libc locally
@@ -324,7 +346,7 @@ docker cp c93ecb781483:/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 /home/timnikla
 LD_DEBUG=libs ./vuln_patched
 ```
 
-# gind how many bits aslr system has
+# find how many bits aslr system has
 - find out how many bits are randomized with aslr 
 ```
 sudo cat /proc/sys/vm/mmap_rnd_bits
@@ -360,4 +382,49 @@ chain = b''.join([
 sudo gem install one_gadget
 ```
 
-- 
+
+# IDA
+- 'F5' to decompile
+- 'Tab' to switch between assembly and pseudocode
+- 'Space' to swtich between graph view and linear view
+- 'N' to rename things
+- 'Y' to retype things
+- 'x' to find cross references
+- '/' to comment
+
+- add (local) types, rightclick -> add type -> c code (then retype from char to phonebook pointer) 
+```
+struct phonebook entry {
+	char data[0x70];
+}
+```
+
+
+# Heap: actual malloc code
+- https://elixir.bootlin.com/glibc/glibc-2.36.9000/source/malloc/malloc.c
+
+
+# docker debug setup
+- start container
+```
+docker compose -f debug.yml up
+```
+- get container id
+```
+docker ps --quiet --filter 'ancestor=softsec/<yellow-pages>'
+```
+- get shell into container
+```
+docker exec -ti efa9546ef03b /bin/bash
+```
+- use pwndbg
+```
+gdb -p "$(pgrep -n vuln)"
+```
+- all in one command :)
+```
+docker exec -ti $(docker ps --quiet --filter 'ancestor=softsec/yellow-pages') /bin/bash -c gdb -p \"$(pgrep -n vuln)\" 
+```
+```
+conn = pwn.remote('127.0.0.1', 1024)
+```

