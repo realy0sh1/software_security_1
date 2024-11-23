@@ -421,10 +421,14 @@ docker exec -ti efa9546ef03b /bin/bash
 ```
 gdb -p "$(pgrep -n vuln)"
 ```
-- all in one command :)
+- two in one
 ```
-docker exec -ti $(docker ps --quiet --filter 'ancestor=softsec/yellow-pages') /bin/bash -c gdb -p \"$(pgrep -n vuln)\" 
+docker exec -ti $(docker ps --quiet --filter 'ancestor=softsec/stringbins') /bin/bash
 ```
 ```
 conn = pwn.remote('127.0.0.1', 1024)
 ```
+
+
+# Fastbins
+- 10 fastbins with sizes: 16, 24, 32, 40, 48, 56, 64, 72, 80 and 88.
