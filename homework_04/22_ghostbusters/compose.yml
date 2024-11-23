@@ -1,0 +1,14 @@
+services:
+  ghostbusters:
+    image: softsec/ghostbusters
+    build: .
+    pull_policy: never
+    hostname: ghostbusters
+    platform: "linux/amd64"
+    ports:
+      - 127.0.0.1:1024:1024
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - apparmor=unconfined
+
