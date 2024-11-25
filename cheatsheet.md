@@ -394,7 +394,7 @@ sudo gem install one_gadget
 
 - add (local) types, rightclick -> add type -> c code (then retype from char to phonebook pointer) 
 ```
-struct phonebook entry {
+struct phonebook_entry {
 	char data[0x70];
 }
 ```
@@ -430,5 +430,6 @@ conn = pwn.remote('127.0.0.1', 1024)
 ```
 
 
-# Fastbins
+# Heap
 - 10 fastbins with sizes: 16, 24, 32, 40, 48, 56, 64, 72, 80 and 88.
+- the house of exploits: https://seclists.org/bugtraq/2005/Oct/118
