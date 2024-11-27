@@ -426,6 +426,9 @@ gdb -p "$(pgrep -n vuln)"
 docker exec -ti $(docker ps --quiet --filter 'ancestor=softsec/stringbins') /bin/bash
 ```
 ```
+docker exec -ti $(docker ps -q -f 'ancestor=softsec/unsorted') /bin/bash -c 'gdb -p "$(pregp -n vuln)"'
+```
+```
 conn = pwn.remote('127.0.0.1', 1024)
 ```
 
@@ -433,3 +436,28 @@ conn = pwn.remote('127.0.0.1', 1024)
 # Heap
 - 10 fastbins with sizes: 16, 24, 32, 40, 48, 56, 64, 72, 80 and 88.
 - the house of exploits: https://seclists.org/bugtraq/2005/Oct/118
+- main arena is in libc:
+```
+p main_arena
+```
+- size of malloc() is always multiple of 16 Bytes (and we need 8 Bytes of Chunk header)
+- in unsorted list (double linked list) there are pointer to main arena
+
+### get main_arena offset
+- get main arena position via gdb (not in debug symbols)
+- get libc base and pointer of main_arena (subtract to get offset to main_arena)
+```
+vmmap
+p &main_arena
+```
+
+### practically disable tchache
+- option 1: malloc stuff that is bigger than tcache or fastbin entries
+- option 2: 
+	- tcache has 7 entries per size
+	- malloc 8 things
+	- free 7 things (cache full)
+	- free 8th thing => in fastbin (or unsorted if fastbin full, this way disable fastbin as well)
+	- malloc 7 things (tcache empty now)
+	- malloc 8-th thing (we get it from fastbin (or unsorted))
+

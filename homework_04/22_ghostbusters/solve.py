@@ -12,8 +12,10 @@ pwn.context.arch = 'amd64'
 # 2) docker exec -ti $(docker ps --quiet --filter 'ancestor=softsec/ghostbusters') /bin/bash
 # 3) gdb -p "$(pgrep -n vuln)"
 
-conn = pwn.remote('tasks.ws24.softsec.rub.de', 33739)
-#conn = pwn.remote('127.0.0.1', 1024)
+# 2) docker exec -ti $(docker ps -q -f 'ancestor=softsec/ghostbusters') /bin/bash -c 'gdb -p "$(pregp -n vuln)"'
+
+#conn = pwn.remote('tasks.ws24.softsec.rub.de', 33739)
+conn = pwn.remote('127.0.0.1', 1024)
 
 
 # 1) get stack and libc pointer
