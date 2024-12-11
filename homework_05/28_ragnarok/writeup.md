@@ -14,3 +14,7 @@
 - inspect warrior allows to leak heap values, as we can give a size, eventhough actual size may be smaller
 - rename_warrior has an off-by-one error and one nullbyte is written beyond chunk
 
+# flag
+```
+softsec{gsyj-qsHrAKM2PKEa4ZOhHs_zRNPrxpGx7JXgJYV9r5uQ6HDiM-TmZqA4rcMakqQ}
+```
