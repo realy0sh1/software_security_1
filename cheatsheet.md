@@ -464,6 +464,11 @@ vmmap
 p &main_arena
 ```
 
+## get got of libc
+```
+got -p libc
+```
+
 ### practically disable tchache
 - option 1: malloc stuff that is bigger than tcache or fastbin entries
 - option 2: 
