@@ -224,6 +224,10 @@ fastbins
 ```
 got -p libc
 ```
+- get address of function
+```
+info address win
+```
 
 
 ## strace: trace system calls
