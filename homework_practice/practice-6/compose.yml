@@ -1,0 +1,10 @@
+# Please see RUNNING.md for details on how to run this task.
+
+services:
+  practice-6:
+    extends:
+      file: base.yml
+      service: practice-6
+    image: softsec/practice-6
+    build:
+      target: default

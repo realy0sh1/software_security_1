@@ -1,0 +1,12 @@
+# Please see RUNNING.md for details on how to run this task.
+
+services:
+  practice-2:
+    extends:
+      file: base.yml
+      service: practice-2
+    image: softsec/debug/practice-2
+    build:
+      target: debug
+    cap_add:
+      - SYS_PTRACE

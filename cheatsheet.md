@@ -483,3 +483,7 @@ got -p libc
 	- malloc 7 things (tcache empty now)
 	- malloc 8-th thing (we get it from fastbin (or unsorted))
 
+## get vtable
+```
+objdump -t ./vuln | c++filt | grep vtable
+```
