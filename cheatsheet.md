@@ -494,3 +494,6 @@ python3 -m venv softsec
 source softsec/bin/activate
 pip3 install pwn
 ```
+
+## ida sciebo
+https://ruhr-uni-bochum.sciebo.de/s/HtOsjEyOgeYjLOd
