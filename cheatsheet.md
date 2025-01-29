@@ -487,3 +487,13 @@ got -p libc
 ```
 objdump -t ./vuln | c++filt | grep vtable
 ```
+
+## shellcode with junk
+- add a short jump, jump over trash
+```
+jump $+4
+```
+- add a nop (this ignores 4 bytes)
+```
+nop DWORD [RAX - 0x48]
+```
