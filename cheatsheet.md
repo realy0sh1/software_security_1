@@ -491,5 +491,5 @@ objdump -t ./vuln | c++filt | grep vtable
 ## python virtual environment
 ```
 python3 -m venv softsec
-source myenv/bin/activate
+source softsec/bin/activate
 ```
