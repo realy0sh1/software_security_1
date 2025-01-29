@@ -1,6 +1,9 @@
 # Cheatsheet binary exploitation
+- scoreboard: 
 
 ## IDA: reverse engineering and binary analysis
+- on sciebo: https://ruhr-uni-bochum.sciebo.de/s/HtOsjEyOgeYjLOd
+- my key is in my keepass and needs to be saved in installation directory
 - install IDA Free 9.0 (https://hex-rays.com/ida-free) in /opt/ida-free-pc-9.0
 - add destop icon via /home/timniklas/.local/share/applications/ida.desktop
 ```
@@ -23,10 +26,6 @@ Keywords=IDA
 ```
 objdump -M intel -d ./my_binary
 ```
-
-
-## masm/nasm/yasm: assembler
-- TODO: figure out, what to use
 
 
 ## gcc: compiler
@@ -230,10 +229,6 @@ info address win
 ```
 
 
-## strace: trace system calls
-- todo
-
-
 ## python + pwntools: Exploit writing
 - doc: https://docs.pwntools.com/en/latest/intro.html
 - install pwntools (4.13.1) via pip
@@ -244,7 +239,26 @@ pip install pwntools
 ```
 checksec --file=my_binary
 ```
-- basic usage
+- basic usage with docker setup for exam
+```python
+import pwn
+
+conn = pwn.remote('tasks.ws24.softsec.rub.de', 33267)
+#conn = pwn.remote('127.0.0.1', 1024)
+
+# wait for user input (in this time, connect gdb)
+pwn.pause()
+
+def call_secret():
+    conn.sendlineafter(b'> ', b'42')
+    conn.sendlineafter(b'Index: ', b'0')
+
+
+call_secret()
+
+conn.interactive()
+```
+- basic usage for CTF in general (use pwninit to setup library)
 ```python
 #!/usr/bin/env python3
 
@@ -337,8 +351,6 @@ search /1/ pop rdi
 search pop %; mov rdi, [rsp + %]; mov rax, [rsp + %];
 ```
 
-
-
 # extract linker to run other libc locally
 - get container id
 ```
@@ -366,15 +378,6 @@ LD_DEBUG=libs ./vuln_patched
 - find out how many bits are randomized with aslr 
 ```
 sudo cat /proc/sys/vm/mmap_rnd_bits
-```
-
-
-# found out how far we can go with the overflow until we reach the return address
-- get a non repeating string with python 
-- paste it in the input, then use cyclic_find to get the length
-```
-cyclic(128)
-cyclic_find(0x<address>)
 ```
 
 
@@ -422,33 +425,9 @@ struct phonebook_entry {
 
 
 # docker debug setup
-- start container
 ```
-docker compose -f debug.yml up
+ docker exec -ti "$(docker ps -q -f 'ancestor=softsec/debug/practice-5')" /bin/bash -c 'gdb -p "$(pgrep -n vuln)"'
 ```
-- get container id
-```
-docker ps --quiet --filter 'ancestor=softsec/<yellow-pages>'
-```
-- get shell into container
-```
-docker exec -ti efa9546ef03b /bin/bash
-```
-- use pwndbg
-```
-gdb -p "$(pgrep -n vuln)"
-```
-- two in one
-```
-docker exec -ti $(docker ps --quiet --filter 'ancestor=softsec/stringbins') /bin/bash
-```
-```
-docker exec -ti $(docker ps -q -f 'ancestor=softsec/unsorted') /bin/bash -c 'gdb -p "$(pregp -n vuln)"'
-```
-```
-conn = pwn.remote('127.0.0.1', 1024)
-```
-
 
 # Heap
 - 10 fastbins with sizes: 16, 24, 32, 40, 48, 56, 64, 72, 80 and 88.
@@ -489,21 +468,22 @@ objdump -t ./vuln | c++filt | grep vtable
 ```
 
 ## shellcode with junk
+- push stuff
+```
+push rax, 0x1337
+```
 - add a short jump, jump over trash
 ```
-jump $+4
+jmp $+4
 ```
-- add a nop (this ignores 4 bytes)
+- multi byte nop (this ignores 4 bytes)
 ```
-nop DWORD [RAX - 0x48]
+nop DWORD PTR [RAX - 0x48];
 ```
 
 ## python virtual environment
 ```
-python3 -m venv softsec
-source softsec/bin/activate
+python3 -m venv softsec_venv
+source softsec_venv/bin/activate
 pip3 install pwn
 ```
-
-## ida sciebo
-https://ruhr-uni-bochum.sciebo.de/s/HtOsjEyOgeYjLOd
