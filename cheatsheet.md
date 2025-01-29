@@ -497,3 +497,13 @@ jump $+4
 ```
 nop DWORD [RAX - 0x48]
 ```
+
+## python virtual environment
+```
+python3 -m venv softsec
+source softsec/bin/activate
+pip3 install pwn
+```
+
+## ida sciebo
+https://ruhr-uni-bochum.sciebo.de/s/HtOsjEyOgeYjLOd
