@@ -470,7 +470,11 @@ objdump -t ./vuln | c++filt | grep vtable
 ## shellcode with junk
 - push stuff
 ```
-push rax, 0x1337
+push rax
+```
+- push 2 bytes
+```
+pushw 0x1122;
 ```
 - add a short jump, jump over trash
 ```

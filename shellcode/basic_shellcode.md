@@ -122,15 +122,19 @@ shellcode = pwn.asm('''
 ''')
 ```
 
+### Trick, mask 2 bytes trash via PUSHW imm16
+- 2 bytes fix (0x6668), then 2 byte arbitrary
+```
+pushw 0xb848; # 6668 48b8 (0x6668 plus 2 bytes immediate value)
+```
 
 ### Trick, mask 4 trash bytes via PUSH imm32
 - 1 byte fix (0x64), then 4 bytes arbitrary
 ```
-shellcode = pwn.asm('''             
+shellcode = pwn.asm('''
     push 0x11223344; #6844332211 (0x68 plus 4 byte immediate value in little endian)
 ''')
 ```
-
 
 ### Trick, jump over trash bytes via JUMP rel8
 - 1 byte fix (0xeb) and 1 byte jump offset (-128,+127)

