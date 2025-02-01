@@ -230,66 +230,10 @@ info address win
 ```
 
 
-## python + pwntools: Exploit writing
-- doc: https://docs.pwntools.com/en/latest/intro.html
-- install pwntools (4.13.1) via pip
-```
-pip install pwntools
-```
+## checksec
 - use checksec to find out which security features binary has
 ```
 checksec --file=my_binary
-```
-- basic usage with docker setup for exam
-```python
-import pwn
-
-conn = pwn.remote('tasks.ws24.softsec.rub.de', 33267)
-#conn = pwn.remote('127.0.0.1', 1024)
-
-# wait for user input (in this time, connect gdb)
-pwn.pause()
-
-def call_secret():
-    conn.sendlineafter(b'> ', b'42')
-    conn.sendlineafter(b'Index: ', b'0')
-
-
-call_secret()
-
-conn.interactive()
-```
-- basic usage for CTF in general (use pwninit to setup library)
-```python
-#!/usr/bin/env python3
-
-import pwn
-
-exe = pwn.ELF("./vuln_patched")
-libc = pwn.ELF("./libc.so.6")
-ld = pwn.ELF("./ld-linux-x86-64.so.2")
-
-pwn.context.arch = 'amd64'
-#pwn.context.binary = exe
-
-#conn = pwn.remote('tasks.ws24.softsec.rub.de', 33311)
-conn = pwn.process([exe.path])
-
-pwn.gdb.attach(conn)
-
-conn.interactive()
-exit()
-```
-```python
-form pwn import *
-
-context.terminal
-
-context.terminal = ['/bin/sh']
-tube = gdb.debug('./vuln')
-
-tube.write(b'A'*40)
-
 ```
 
 ## manpage: get info about libc and syscalls
@@ -368,10 +312,6 @@ struct phonebook_entry {
 - https://elixir.bootlin.com/glibc/glibc-2.36.9000/source/malloc/malloc.c
 
 
-# docker debug setup
-```
- docker exec -ti "$(docker ps -q -f 'ancestor=softsec/debug/practice-5')" /bin/bash -c 'gdb -p "$(pgrep -n vuln)"'
-```
 
 # Heap
 - 10 fastbins with sizes: 16, 24, 32, 40, 48, 56, 64, 72, 80 and 88.
@@ -406,16 +346,40 @@ got -p libc
 	- malloc 7 things (tcache empty now)
 	- malloc 8-th thing (we get it from fastbin (or unsorted))
 
+
 ## get vtable
 ```
 objdump -t ./vuln | c++filt | grep vtable
 ```
-
-
 
 ## python virtual environment
 ```
 python3 -m venv softsec_venv
 source softsec_venv/bin/activate
 pip3 install pwn
+```
+
+## python conversions
+- bytes with number to int
+```
+b = b'AC12'
+i = int(b, 16)
+
+b = b'112'
+i = int(b, 10)
+```
+
+- raw bytes to int
+```
+pwn.u64(b)
+
+i = b'\x00'
+int.from_bytes(i, 'little')
+```
+
+- int to bytes
+```
+i = 0xAC12
+b = pwn.p64(i)
+b = pwn.p64(i, endien="big")
 ```
