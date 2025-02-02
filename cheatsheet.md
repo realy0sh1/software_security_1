@@ -1,24 +1,4 @@
 # Cheatsheet binary exploitation
-- scoreboard: 
-
-## IDA: reverse engineering and binary analysis
-- on sciebo: https://ruhr-uni-bochum.sciebo.de/s/HtOsjEyOgeYjLOd
-- my key is in my keepass and needs to be saved in installation directory
-- install IDA Free 9.0 (https://hex-rays.com/ida-free) in /opt/ida-free-pc-9.0
-- add destop icon via /home/timniklas/.local/share/applications/ida.desktop
-```
-[Desktop Entry]
-Name=IDA Free
-Comment=Reverse Engineering
-Exec=/opt/ida-free-pc-9.0/ida
-Terminal=false
-Type=Application
-Icon=/opt/ida-free-pc-9.0/appico.png
-StartupNotify=true
-Categories=Development;
-Keywords=IDA
-```
-- Show C-source code by pressing F5
 
 
 ## objdump: quick peek at disassembly
@@ -236,6 +216,7 @@ info address win
 checksec --file=my_binary
 ```
 
+
 ## manpage: get info about libc and syscalls
 - get information about libc
 ```
@@ -245,6 +226,7 @@ man 3 gets
 ```
 man 2 open
 ```
+
 
 ## Registers
 - restore: rbx, rbp, r12, r13, r14, r15, rsp
@@ -256,7 +238,6 @@ man 2 open
 
 ## x86 (amd64) instruction set
 - https://treeniks.github.io/x86-64-simplified/prefix.html
-
 
 
 # extract linker to run other libc locally
@@ -282,29 +263,11 @@ docker cp c93ecb781483:/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 /home/timnikla
 LD_DEBUG=libs ./vuln_patched
 ```
 
+
 # find how many bits aslr system has
 - find out how many bits are randomized with aslr 
 ```
 sudo cat /proc/sys/vm/mmap_rnd_bits
-```
-
-
-
-# IDA
-- 'F5' to decompile
-- 'Tab' to switch between assembly and pseudocode
-- 'Space' to swtich between graph view and linear view
-- 'N' to rename things
-- 'Y' to retype things
-- 'x' to find cross references
-- '/' to comment
-- rightclick on value to change int->char etc
-- mark -> edit -> export data (get hexstring from raw bytes)
-- add (local) types, rightclick -> add type -> c code (then retype from char to phonebook pointer) 
-```
-struct phonebook_entry {
-	char data[0x70];
-}
 ```
 
 
@@ -323,6 +286,7 @@ p main_arena
 - size of malloc() is always multiple of 16 Bytes (and we need 8 Bytes of Chunk header)
 - in unsorted list (double linked list) there are pointer to main arena
 
+
 ### get main_arena offset
 - get main arena position via gdb (not in debug symbols)
 - get libc base and pointer of main_arena (subtract to get offset to main_arena)
@@ -331,10 +295,12 @@ vmmap
 p &main_arena
 ```
 
+
 ## get got of libc
 ```
 got -p libc
 ```
+
 
 ### practically disable tchache
 - option 1: malloc stuff that is bigger than tcache or fastbin entries
@@ -352,12 +318,14 @@ got -p libc
 objdump -t ./vuln | c++filt | grep vtable
 ```
 
+
 ## python virtual environment
 ```
 python3 -m venv softsec_venv
 source softsec_venv/bin/activate
 pip3 install pwn
 ```
+
 
 ## python conversions
 - bytes with number to int

@@ -2,6 +2,7 @@
 
 import pwn
 
+# pwninit
 exe = pwn.ELF("./vuln_patched")
 libc = pwn.ELF("./libc.so.6")
 ld = pwn.ELF("./ld-linux-x86-64.so.2")
