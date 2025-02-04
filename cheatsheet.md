@@ -1,7 +1,53 @@
 # Cheatsheet binary exploitation
 
 
-## objdump: quick peek at disassembly
+### x86 (amd64) instruction set
+- https://treeniks.github.io/x86-64-simplified/prefix.html
+
+
+### x86 64bit registers
+- restore: rbx, rbp, r12, r13, r14, r15, rsp
+- change freely: rax, rcx, rdx, rsi, rdi, r8, r9, r10, r11
+
+- fastcall: rdi, rsi, rdx, rcx, r8, r9, stack
+- syscall: rdi, rsi, rdx
+
+
+### python virtual environment
+```
+python3 -m venv softsec_venv
+source softsec_venv/bin/activate
+pip3 install pwn
+```
+
+
+### python conversions
+- bytes with number to int
+```
+b = b'AC12'
+i = int(b, 16)
+
+b = b'112'
+i = int(b, 10)
+```
+
+- raw bytes to int
+```
+pwn.u64(b)
+
+i = b'\x00'
+int.from_bytes(i, 'little')
+```
+
+- int to bytes
+```
+i = 0xAC12
+b = pwn.p64(i)
+b = pwn.p64(i, endien="big")
+```
+
+
+### objdump: quick peek at disassembly
 - dump binary with:
 ```
 objdump -M intel -d ./my_binary
@@ -9,7 +55,53 @@ objdump -M intel -D ./vuln
 ```
 
 
-## gcc: compiler
+## checksec
+- use checksec to find out which security features binary has
+```
+checksec --file=my_binary
+```
+
+
+### manpage: get info about libc and syscalls
+- get information about libc
+```
+man 3 gets
+```
+
+
+### get info about syscalls
+- https://syscalls.mebeim.net/?table=x86/64/x64/latest
+```
+man 2 open
+```
+
+
+### extract linker from docker to run other libc locally
+- get container id
+```
+docker ps
+```
+- get correct linker (in addition to the already provided libc)
+```
+docker exec -it c93ecb781483 /bin/bash
+cd /lib/x86_64-linux-gnu
+
+ld-linux-x86-64.so.2
+
+docker cp c93ecb781483:/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 /home/timniklas/Code/software_security_1/homework_02/10_echo
+```
+- setup pwndbg
+```
+- use pwninit to get it working (cargo install pwninit)
+```
+- verify that it worked
+```
+LD_DEBUG=libs ./vuln_patched
+```
+
+
+### gcc and asm files
+- for shellcode use pwntools in python instead, as more convenient
 - switch to intel syntax, add at top of asm file fizzbuzz.s:
 ```
 .intel_syntax noprefix
@@ -71,279 +163,8 @@ gcc main.c fizzbuzz.s -o main
 ```
 
 
-## gdb + pwndbg: Debugging and Dynamic Analysis
-- cheat sheet: https://pwndbg.re/CheatSheet.pdf
-- install gdb + pwndebug (or gef)
-```
-git clone https://github.com/pwndbg/pwndbg
-cd pwndbg
-./setup.sh
-```
-- allow root to use it, add /root/.gdbinit
-```
-source /home/timniklas/pwndbg/gdbinit.py
-add-auto-load-safe-path /home/timniklas/.gdbinit
-```
-- open binary directly in gdb
- ```
-gdb ./my_binary
- ```
-- attach gdb to running process: get newest process id of process cat and debug
-```
-sudo -E gdb -p $(pgrep -n vuln)
-```
-- print (20 entries) of stack
-```
-stack 20
-```
-- show memory at rsi
-```
-telescope $rsi 20
-```
-- print a value
-```
-p/x $rsi
-```
-- run program (and interact with it) 
-```
-r
-```
-- start and break at the main function (does the initialization)
-```
-start
-```
-- start at the very first instruction and break (all registers zero)
-```
-starti
-```
-- continue (until the end/breakpoint)
-```
-c
-```
-- step a single instruction
-```
-si
-```
-- find all commands that are related to another command (e.g. similar to step)
-```
-apropos step
-```
-- press enter to repeat same command
-- step out of a function (runs until the return of the function)
-```
-fin
-```
-- next instruction (skip calls, meaning execute call and stop after wards)
-```
-ni
-```
-- set break points (break on the functino "read")
-```
-b read
-```
-- break on address
-```
-b *Ox55...555
-b *main+10
-```
-- gdb will turn off ASLR if we start programm with gdb
-- if we attach gdb to a programm, ASLR is on => addresses change => breakpoints will not work
-- get address of system() libc
-```
-p system
-```
-- get symbol (function) of address
-```
-info symbol 0x79ac90a29d90
-```
-- show next 10 instructions starting at address
-```
-x/10i 0x747a03e2a3e5
-```
-- disassemble function
-```
-disassemble <function_name>
-```
-- create breakpoint at fork()
-```
-catch fork
-```
-- decide if gdb should follow the child or parent on fork
-```
-set follow-fork-mode child
-```
-- allow gdb to keep control of both parent and child
-```
-set detach-on-fork off
-```
-- create breakpoint in gdb if SIGINT signal handler triggers
-```
-handler SIGINT stop apss
-```
-- see all signals
-```
-kill -l
-```
-- send signal to program (that runs inside gdb)
-```
-kill -SIGINT $(pgrep signal-example)
-```
-- search a 8 bytes in stack in gdb
-```
-search -t qword 0xdeadbead
-```
-- show heap:
-```
-heap
-```
-- show fastbins:
-```
-fastbins
-```
-- get got of libc using pwndbg:
-```
-got -p libc
-```
-- get address of function
-```
-info address win
-```
-
-
-## checksec
-- use checksec to find out which security features binary has
-```
-checksec --file=my_binary
-```
-
-
-## manpage: get info about libc and syscalls
-- get information about libc
-```
-man 3 gets
-```
-- get information about syscalls: https://syscalls.mebeim.net/?table=x86/64/x64/latest
-```
-man 2 open
-```
-
-
-## Registers
-- restore: rbx, rbp, r12, r13, r14, r15, rsp
-- change freely: rax, rcx, rdx, rsi, rdi, r8, r9, r10, r11
-
-- fastcall: rdi, rsi, rdx, rcx, r8, r9, stack
-- syscall: rdi, rsi, rdx
-
-
-## x86 (amd64) instruction set
-- https://treeniks.github.io/x86-64-simplified/prefix.html
-
-
-# extract linker to run other libc locally
-- get container id
-```
-docker ps
-```
-- get correct linker (in addition to the already provided libc)
-```
-docker exec -it c93ecb781483 /bin/bash
-cd /lib/x86_64-linux-gnu
-
-ld-linux-x86-64.so.2
-
-docker cp c93ecb781483:/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 /home/timniklas/Code/software_security_1/homework_02/10_echo
-```
-- setup pwndbg
-```
-- use pwninit to get it working (cargo install pwninit)
-```
-- verify that it worked
-```
-LD_DEBUG=libs ./vuln_patched
-```
-
-
-# find how many bits aslr system has
+### find how many bits aslr system has
 - find out how many bits are randomized with aslr 
 ```
 sudo cat /proc/sys/vm/mmap_rnd_bits
-```
-
-
-# Heap: actual malloc code
-- https://elixir.bootlin.com/glibc/glibc-2.36.9000/source/malloc/malloc.c
-
-
-
-# Heap
-- 10 fastbins with sizes: 16, 24, 32, 40, 48, 56, 64, 72, 80 and 88.
-- the house of exploits: https://seclists.org/bugtraq/2005/Oct/118
-- main arena is in libc:
-```
-p main_arena
-```
-- size of malloc() is always multiple of 16 Bytes (and we need 8 Bytes of Chunk header)
-- in unsorted list (double linked list) there are pointer to main arena
-
-
-### get main_arena offset
-- get main arena position via gdb (not in debug symbols)
-- get libc base and pointer of main_arena (subtract to get offset to main_arena)
-```
-vmmap
-p &main_arena
-```
-
-
-## get got of libc
-```
-got -p libc
-```
-
-
-### practically disable tchache
-- option 1: malloc stuff that is bigger than tcache or fastbin entries
-- option 2: 
-	- tcache has 7 entries per size
-	- malloc 8 things
-	- free 7 things (cache full)
-	- free 8th thing => in fastbin (or unsorted if fastbin full, this way disable fastbin as well)
-	- malloc 7 things (tcache empty now)
-	- malloc 8-th thing (we get it from fastbin (or unsorted))
-
-
-
-
-## python virtual environment
-```
-python3 -m venv softsec_venv
-source softsec_venv/bin/activate
-pip3 install pwn
-```
-
-
-## python conversions
-- bytes with number to int
-```
-b = b'AC12'
-i = int(b, 16)
-
-b = b'112'
-i = int(b, 10)
-```
-
-- raw bytes to int
-```
-pwn.u64(b)
-
-i = b'\x00'
-int.from_bytes(i, 'little')
-```
-
-- int to bytes
-```
-i = 0xAC12
-b = pwn.p64(i)
-b = pwn.p64(i, endien="big")
 ```
