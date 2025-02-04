@@ -1,4 +1,4 @@
-# Stack ropchain
+# Stack
 
 ### Objdump explore elf if small ASM program given (instead of IDA)
 - dump binary with:
