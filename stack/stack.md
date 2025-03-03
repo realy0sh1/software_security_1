@@ -18,7 +18,7 @@ pip install ropper
 ```
 - find gadgets
 ```
-ropper --file ./vuln
+ropper --file ./vuln --all
 ropper --file ./vuln --search syscall
 ropper --file ./vuln --inst-count 2 --type rop
 ropper --file ./vuln --search "mov rdi, e?x" --inst-count 2 --type rop
