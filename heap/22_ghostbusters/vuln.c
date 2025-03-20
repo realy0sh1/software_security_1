@@ -79,6 +79,7 @@ void delete(size_t *equipment_list)
     }
 }
 
+// add gives us the heap pointer of malloced equipment
 void add(size_t *equipment_list)
 {
     equipment_t *new_equip = malloc(sizeof(equipment_t));

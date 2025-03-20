@@ -2,8 +2,8 @@ import pwn
 
 # Feedback: this was too hard for an exam task in my opinion. We do not learn C++ in university at any time. So parsing the code alone is challenging and takes a lot of time (not good for an exam). Even after the vulnerability was found, this way hard to execute. Having one 32-bit inputs makes it unnessercerly hard in my opinion. Took me 4h. I think I would have failed this one in the time. 
 
-conn = pwn.remote('tasks.ws24.softsec.rub.de', 33274)
-#conn = pwn.remote('127.0.0.1', 1024)
+#conn = pwn.remote('tasks.ws24.softsec.rub.de', 33274)
+conn = pwn.remote('127.0.0.1', 1024)
 
 #pwn.pause()
 

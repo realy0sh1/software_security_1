@@ -35,4 +35,21 @@ Keywords=IDA
 struct phonebook_entry {
 	char data[0x70];
 }
+
+struct team {
+    char *name;
+    int points;
+}
+
+struct teams {
+    team *teams;
+    __int64 max_teams;
+    __int64 number_of_teams;
+}
+
+struct node {
+    char name;
+    node *left_child;
+    node *right_child;
+}
 ```

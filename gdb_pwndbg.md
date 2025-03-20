@@ -109,7 +109,10 @@ vmmap
 ```
 got -p libc
 ```
-
+- got of vuln via:
+```
+got
+```
 
 ### get main_arena offset
 - main_arena is in libc (but not in debug symbols)
@@ -117,6 +120,14 @@ got -p libc
 ```
 vmmap
 p &main_arena
+```
+
+
+### find c vars
+- find address of c var "bug"
+```
+info variables bug
+info address bug
 ```
 
 

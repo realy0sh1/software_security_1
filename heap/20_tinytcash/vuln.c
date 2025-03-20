@@ -69,7 +69,9 @@ accounts_t *create(accounts_t *head)
     entry->self = malloc(sizeof(*entry->self));
     if (!entry->self)
         err(EXIT_FAILURE, "failed to allocate account");
+    
 
+    // LOG_LENGTH = 0x40 = 64 (can be from tcache)
     entry->self->log = malloc(LOG_LENGTH);
     if (!entry->self->log)
         err(EXIT_FAILURE, "failed to allocate log");
@@ -120,6 +122,8 @@ accounts_t *deposit(accounts_t *head)
     return head;
 }
 
+// widthdraw free()'s log when 0 balance, but pointer remains and can be reused
+// => use after free
 accounts_t *withdraw(accounts_t *head)
 {
     printf("WITHDRAW\n");
@@ -149,7 +153,17 @@ accounts_t *withdraw(accounts_t *head)
 
             if (e->self->balance == 0) {
                 printf("Account has no remaining balance, closing it\n");
+                // free log, but do not delete pointer, so can be used later
                 free(e->self->log);
+                // log is used a malloc()'ed char array
+                // free()'d chunk is now in tcache
+                // so we have next pointer as first entry and key as second
+                // no pointer mangeling, so we can just override the next pointer
+                // tcache nows how many elements in linked list so free() 2 logs
+                // then we can override the next pointer of 2nd free()'d log, as
+                // this log is the head
+                // alloc and ignore
+                // alloc again and now it returns value of our choice (write into log first via deposit)
                 e->self->log_length = 0;
                 e->self->active = false;
             }

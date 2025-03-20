@@ -372,6 +372,8 @@ void handle_delete(struct connection *conn, char *path)
     }
 }
 
+// NOTE: this function is called for each connection in a new thread
+// NOTE: strtok is not thread safe
 void handle_connection(struct connection *conn)
 {
     const char *error = BAD_REQUEST;

@@ -8,8 +8,8 @@ libc = pwn.ELF("./libc.so.6")
 
 pwn.context.arch = 'amd64'
 
-conn = pwn.remote('tasks.ws24.softsec.rub.de', 33727)
-#conn = pwn.process([exe.path])
+#conn = pwn.remote('tasks.ws24.softsec.rub.de', 33727)
+conn = pwn.process([exe.path])
 
 #pwn.gdb.attach(conn, gdbscript="""
 #set detach-on-fork off

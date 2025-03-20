@@ -156,6 +156,10 @@ int main(void)
 
         pthread_t thread;
         void *thread_arg = (void *) (uintptr_t) conn;
+
+        // i can do multiple connections :)
+        // each connection calls handle_connection_wrapper -> handle_connection
+
         if ((errno = pthread_create(&thread, NULL, handle_connection_wrapper, thread_arg))) {
             warn("Failed to spawn thread for incoming connection");
             ssize_t written = write(conn, "Server is overloaded\n", 21);
