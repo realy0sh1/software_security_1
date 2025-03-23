@@ -112,6 +112,7 @@ void delete_student()
         return;
     }
 
+    // UFA vulnerability
     free(current);
     puts("Student deleted!");
 }
